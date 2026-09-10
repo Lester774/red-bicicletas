@@ -1,35 +1,41 @@
-var Bicicleta = function(id, color, modelo, ubicacion) {
-    this.id = id;
-    this.color = color;
-    this.modelo = modelo;
-    this.ubicacion = ubicacion;
-}
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-Bicicleta.allBics = [];
+const bicicletaSchema = new Schema({
+  code: Number,
+  color: String,
+  modelo: String,
+  ubicacion: {
+    type: [Number],
+    index: { type: '2dsphere', sparse: true }
+  }
+});
 
-Bicicleta.add = function(aBici) {
-    Bicicleta.allBics.push(aBici);
-}
+// Método de instancia para crear la estructura
+bicicletaSchema.statics.createInstance = function(code, color, modelo, ubicacion) {
+  return new this({
+    code: code,
+    color: color,
+    modelo: modelo,
+    ubicacion: ubicacion
+  });
+};
 
-Bicicleta.findById = function(aBiciId) {
-    var aBici = Bicicleta.allBics.find(x => x.id == aBiciId);
-    if (aBici) return aBici;
-    throw new Error(`No existe una bicicleta con el id ${aBiciId}`);
-}
+// Métodos estáticos requeridos por las pruebas
+bicicletaSchema.statics.allBikes = function() {
+  return this.find({});
+};
 
-Bicicleta.removeById = function(aBiciId) {
-    for(var i = 0; i < Bicicleta.allBics.length; i++) {
-        if (Bicicleta.allBics[i].id == aBiciId) {
-            Bicicleta.allBics.splice(i, 1);
-            break;
-        }
-    }
-}
+bicicletaSchema.statics.add = function(aBici) {
+  return this.create(aBici);
+};
 
-var a = new Bicicleta(1, 'Rojo', 'Urbana', [14.0723, -87.1921]);
-var b = new Bicicleta(2, 'Blanco', 'Deppet', [14.0750, -87.1950]);
+bicicletaSchema.statics.findByCode = function(aCode) {
+  return this.findOne({ code: aCode });
+};
 
-Bicicleta.add(a);
-Bicicleta.add(b);
+bicicletaSchema.statics.removeByCode = function(aCode) {
+  return this.deleteOne({ code: aCode });
+};
 
-module.exports = Bicicleta;
+module.exports = mongoose.model('Bicicleta', bicicletaSchema);
